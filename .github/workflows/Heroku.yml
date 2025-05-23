@@ -1,0 +1,62 @@
+name: CI/CD to Heroku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute tests
+        run: |
+          python manage.py test
+        env:
+          DJANGO_SETTINGS_MODULE: project_gallery.settings
+          APP_SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
+          APP_DEBUG: 'False'
+
+      - name: Heroku CLI login
+        env:
+          HEROKU_TOKEN: ${{ secrets.HEROKU_TOKEN }}
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+          echo $HEROKU_TOKEN | heroku login --api-key
+
+      - name: Setup Heroku Git remote
+        run: |
+          heroku git:remote -a ${{ secrets.HEROKU_APP }}
+        env:
+          HEROKU_TOKEN: ${{ secrets.HEROKU_TOKEN }}
+
+      - name: Deploy app to Heroku
+        run: |
+          git push heroku main
+        env:
+          HEROKU_TOKEN: ${{ secrets.HEROKU_TOKEN }}
+
+      - name: Apply database migrations on Heroku
+        run: |
+          heroku run --app ${{ secrets.HEROKU_APP }} python manage.py migrate
+        env:
+          HEROKU_TOKEN: ${{ secrets.HEROKU_TOKEN }}
+
+      - name: Collect static assets on Heroku
+        run: |
+          heroku run --app ${{ secrets.HEROKU_APP }} python manage.py collectstatic --noinput
+        env:
+          HEROKU_TOKEN: ${{ secrets.HEROKU_TOKEN }}
