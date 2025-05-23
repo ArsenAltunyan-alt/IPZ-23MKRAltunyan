@@ -8,6 +8,7 @@ def gallery_view(request):
     images = Image.objects.filter(created_date__gte=one_month_ago)
     return render(request, 'gallery.html', {'images': images})
 
-def image_detail(request, image_id):
-    image = get_object_or_404(Image, pk=image_id)
+def image_detail(request, pk):
+    image = get_object_or_404(Image, pk=pk)
     return render(request, 'image_detail.html', {'image': image})
+
