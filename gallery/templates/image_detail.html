@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="card">
-        <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.title }}">
-        <div class="card-body">
-            <h5 class="card-title">{{ image.title }}</h5>
-        </div>
-    </div>
+    <h1>Деталі зображення</h1>
+        <h2>{{ image.title }}</h2>
+        <img src="{{ image.image.url }}" alt="{{ image.title }}" width="400">
+            <p>Дата створення: {{ image.created_date }}</p>
+            <p>Вікове обмеження: {{ image.age_limit }}</p>
+            <p>Категорії:
+                {% for cat in image.categories.all %}
+                    {{ cat.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
 {% endblock %}
